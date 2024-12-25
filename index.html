@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .inventory-list {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .item {
+            margin-bottom: 10px;
+        }
+        .item button {
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .item button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <h1>Inventory Management</h1>
+    <div class="container">
+        <div class="form-container">
+            <h3>Add Item</h3>
+            <input type="text" id="itemName" placeholder="Item Name" required>
+            <input type="text" id="itemCategory" placeholder="Category" required>
+            <input type="number" id="itemQuantity" placeholder="Quantity" required>
+            <input type="number" step="0.01" id="itemPrice" placeholder="Price" required>
+            <button onclick="addItem()">Add Item</button>
+        </div>
+
+        <div class="form-container">
+            <h3>Update Item</h3>
+            <input type="text" id="updateItemName" placeholder="Item Name to Update" required>
+            <input type="number" id="updateQuantity" placeholder="New Quantity">
+            <input type="number" step="0.01" id="updatePrice" placeholder="New Price">
+            <button onclick="updateItem()">Update Item</button>
+        </div>
+
+        <div class="inventory-list">
+            <h3>Inventory</h3>
+            <div id="inventoryDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        class Item {
+            constructor(name, category, quantity, price) {
+                this.name = name;
+                this.category = category;
+                this.quantity = quantity;
+                this.price = price;
+            }
+
+            getDetails() {
+                return `${this.name} (${this.category}) - Quantity: ${this.quantity}, Price: $${this.price.toFixed(2)}`;
+            }
+        }
+
+        class Inventory {
+            constructor() {
+                this.items = [];
+            }
+
+            addItem(item) {
+                this.items.push(item);
+            }
+
+            updateItem(name, newQuantity = null, newPrice = null) {
+                let item = this.items.find(item => item.name === name);
+                if (item) {
+                    if (newQuantity !== null) item.quantity = newQuantity;
+                    if (newPrice !== null) item.price = newPrice;
+                    return true;
+                }
+                return false;
+            }
+
+            deleteItem(name) {
+                let index = this.items.findIndex(item => item.name === name);
+                if (index !== -1) {
+                    this.items.splice(index, 1);
+                    return true;
+                }
+                return false;
+            }
+
+            getInventory() {
+                return this.items;
+            }
+        }
+
+        const inventory = new Inventory();
+
+        function displayInventory() {
+            const inventoryDisplay = document.getElementById("inventoryDisplay");
+            inventoryDisplay.innerHTML = '';
+
+            if (inventory.getInventory().length === 0) {
+                inventoryDisplay.innerHTML = 'No items in inventory.';
+                return;
+            }
+
+            inventory.getInventory().forEach(item => {
+                const itemDiv = document.createElement("div");
+                itemDiv.classList.add("item");
+                itemDiv.innerHTML = `
+                    <span>${item.getDetails()}</span>
+                    <button onclick="deleteItem('${item.name}')">Delete</button>
+                `;
+                inventoryDisplay.appendChild(itemDiv);
+            });
+        }
+
+        function addItem() {
+            const name = document.getElementById("itemName").value;
+            const category = document.getElementById("itemCategory").value;
+            const quantity = parseInt(document.getElementById("itemQuantity").value);
+            const price = parseFloat(document.getElementById("itemPrice").value);
+
+            if (!name || !category || isNaN(quantity) || isNaN(price)) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            const newItem = new Item(name, category, quantity, price);
+            inventory.addItem(newItem);
+            displayInventory();
+
+            // Clear input fields
+            document.getElementById("itemName").value = '';
+            document.getElementById("itemCategory").value = '';
+            document.getElementById("itemQuantity").value = '';
+            document.getElementById("itemPrice").value = '';
+        }
+
+        function updateItem() {
+            const name = document.getElementById("updateItemName").value;
+            const newQuantity = parseInt(document.getElementById("updateQuantity").value);
+            const newPrice = parseFloat(document.getElementById("updatePrice").value);
+
+            if (!name) {
+                alert("Please enter the item name.");
+                return;
+            }
+
+            const updated = inventory.updateItem(name, newQuantity, newPrice);
+            if (updated) {
+                alert("Item updated successfully.");
+                displayInventory();
+            } else {
+                alert("Item not found.");
+            }
+
+            // Clear input fields
+            document.getElementById("updateItemName").value = '';
+            document.getElementById("updateQuantity").value = '';
+            document.getElementById("updatePrice").value = '';
+        }
+
+        function deleteItem(name) {
+            const deleted = inventory.deleteItem(name);
+            if (deleted) {
+                alert("Item deleted successfully.");
+                displayInventory();
+            } else {
+                alert("Item not found.");
+            }
+        }
+
+        // Initial call to display inventory
+        displayInventory();
+    </script>
+</body>
+</html>
